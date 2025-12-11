@@ -11,7 +11,7 @@
 //import the packages for using the classes in them into the program
 
 import javax.swing.*;
-import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,146 +27,126 @@ public class ListBorrowedBooks extends JInternalFrame {
 	 ***      declaration of the private variables used in the program       ***
 	 ***************************************************************************/
 
-	//for creating the North Panel
-	private JPanel northPanel = new JPanel();
-	//for creating the Center Panel
-	private JPanel centerPanel = new JPanel();
-	//for creating the label
-	private JLabel label = new JLabel("THE LIST FOR THE BORROWED BOOKS");
-	//for creating the button
-	private JButton printButton;
-	//for creating the table
-	private JTable table;
-	//for creating the TableColumn
-	private TableColumn column = null;
-	//for creating the JScrollPane
-	private JScrollPane scrollPane;
-
-	//for creating an object for the ResultSetTableModel class
-	private ResultSetTableModel tableModel;
-	/***************************************************************************
-	 * for setting the required information for the ResultSetTableModel class. *
-	 ***************************************************************************/
-	//private static final String JDBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
-    private static final String JDBC_DRIVER = "org.gjt.mm.mysql.Driver";
-	//private static final String DATABASE_URL = "jdbc:odbc:JLibrary";
-    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Library";
-    private static final String USER_NAME="root";
-    private static final String PASSWORD="nielit";
-	/*private static final String DEFAULT_QUERY = "select BookID,Subject,Title,Author,Publisher,Copyright,Edition," +
-	        "Pages,ISBN, Library from Books where NumberOfBorrowedBooks > 0 OR Availble = false";*/
-private static final String DEFAULT_QUERY = "select BookID,Subject,Title,Author,Publisher,Copyright,Edition," +
+	private static final String JDBC_DRIVER = "org.gjt.mm.mysql.Driver";
+	private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Library";
+	private static final String USER_NAME = "root";
+	private static final String PASSWORD = "nielit";
+	private static final String DEFAULT_QUERY = "select BookID,Subject,Title,Author,Publisher,Copyright,Edition," +
 	        "Pages,ISBN, Library from Books where NumberOfBorrowedBooks > 0";
-	//constructor of listBorrowedBooks
+	private static final Font TABLE_FONT = new Font("Tahoma", Font.PLAIN, 12);
+	private static final Font HEADER_FONT = new Font("Tahoma", Font.BOLD, 14);
+	private static final Font BUTTON_FONT = new Font("Tahoma", Font.PLAIN, 12);
+	private static final ImageIcon FRAME_ICON = new ImageIcon(ClassLoader.getSystemResource("images/List16.gif"));
+	private static final ImageIcon PRINT_ICON = new ImageIcon(ClassLoader.getSystemResource("images/Print16.gif"));
+	private static final Dimension TABLE_SIZE = new Dimension(990, 200);
+	private static final int[] COLUMN_WIDTHS = {50, 100, 150, 50, 70, 40, 40, 40, 75, 50};
+
+	private JPanel northPanel = new JPanel();
+	private JPanel centerPanel = new JPanel();
+	private JLabel label = new JLabel("THE LIST FOR THE BORROWED BOOKS");
+	private JButton printButton;
+	private JTable table;
+	private JScrollPane scrollPane;
+	private ResultSetTableModel tableModel;
+
 	public ListBorrowedBooks() {
-		//for setting the title for the internal frame
 		super("Borrowed Books", false, true, false, true);
-		//for setting the icon
-		setFrameIcon(new ImageIcon(ClassLoader.getSystemResource("images/List16.gif")));
-		//for getting the graphical user interface components display area
+		setFrameIcon(FRAME_ICON);
+
 		Container cp = getContentPane();
 
-		//for bassing the required information to the ResultSetTableModel object
-		try {
-			//tableModel = new ResultSetTableModel(JDBC_DRIVER, DATABASE_URL, DEFAULT_QUERY);
-            tableModel = new ResultSetTableModel(JDBC_DRIVER, DATABASE_URL, USER_NAME, PASSWORD, DEFAULT_QUERY);
-			//for setting the Query
-			try {
-				tableModel.setQuery(DEFAULT_QUERY);
-			}
-			catch (SQLException sqlException) {
-			}
-		}
-		catch (ClassNotFoundException classNotFound) {
-		}
-		catch (SQLException sqlException) {
-		}
-		//for setting the table with the information
-		table = new JTable(tableModel);
-		//for setting the size for the table
-		table.setPreferredScrollableViewportSize(new Dimension(990, 200));
-		//for setting the font
-		table.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		//for setting the scrollpane to the table
+		tableModel = createTableModel(DEFAULT_QUERY);
+		table = createConfiguredTable(tableModel);
 		scrollPane = new JScrollPane(table);
+		printButton = createPrintButton();
 
-		//for setting the size for the table columns
-		for (int i = 0; i < 10; i++) {
-			column = table.getColumnModel().getColumn(i);
-			if (i == 0) //BookID
-				column.setPreferredWidth(50);
-			if (i == 1) //Subject
-				column.setPreferredWidth(100);
-			if (i == 2) //Title
-				column.setPreferredWidth(150);
-			if (i == 3) //Auther
-				column.setPreferredWidth(50);
-			if (i == 4) //Publisher
-				column.setPreferredWidth(70);
-			if (i == 5) //Copyright
-				column.setPreferredWidth(40);
-			if (i == 6) //Edition
-				column.setPreferredWidth(40);
-			if (i == 7) //Pages
-				column.setPreferredWidth(40);
-			if (i == 8) //ISBN
-				column.setPreferredWidth(75);
-			if (i == 9) //Library
-				column.setPreferredWidth(50);
-		}
-		//for setting the font to the label
-		label.setFont(new Font("Tahoma", Font.BOLD, 14));
-		//for setting the layout to the panel
-		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		//for adding the label to the panel
-		northPanel.add(label);
-		//for adding the panel to the container
+		configureNorthPanel();
+		configureCenterPanel();
+
 		cp.add("North", northPanel);
-
-		//for setting the layout to the panel
-		centerPanel.setLayout(new BorderLayout());
-		//for creating an image for the button
-		ImageIcon printIcon = new ImageIcon(ClassLoader.getSystemResource("images/Print16.gif"));
-		//for adding the button to the panel
-		printButton = new JButton("print the books", printIcon);
-		//for setting the tip text
-		printButton.setToolTipText("Print");
-		//for setting the font to the button
-		printButton.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		//for adding the button to the panel
-		centerPanel.add(printButton, BorderLayout.NORTH);
-		//for adding the scrollpane to the panel
-		centerPanel.add(scrollPane, BorderLayout.CENTER);
-		//for setting the border to the panel
-		centerPanel.setBorder(BorderFactory.createTitledBorder("Borrowed books:"));
-		//for adding the panel to the container
 		cp.add("Center", centerPanel);
 
-		//for adding the actionListener to the button
-		printButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				Thread runner = new Thread() {
-					public void run() {
-						try {
-							PrinterJob prnJob = PrinterJob.getPrinterJob();
-							prnJob.setPrintable(new PrintingBooks(DEFAULT_QUERY));
-							if (!prnJob.printDialog())
-								return;
-							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-							prnJob.print();
-							setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-						}
-						catch (PrinterException ex) {
-							System.out.println("Printing error: " + ex.toString());
-						}
-					}
-				};
-				runner.start();
+		setVisible(true);
+		pack();
+	}
+
+	private ResultSetTableModel createTableModel(String query) {
+		try {
+			ResultSetTableModel model = new ResultSetTableModel(JDBC_DRIVER, DATABASE_URL, USER_NAME, PASSWORD, query);
+			model.setQuery(query);
+			return model;
+		}
+		catch (ClassNotFoundException | SQLException exception) {
+			throw new IllegalStateException("Unable to load the borrowed books list", exception);
+		}
+	}
+
+	private JTable createConfiguredTable(ResultSetTableModel model) {
+		JTable configuredTable = new JTable(model);
+		configuredTable.setPreferredScrollableViewportSize(TABLE_SIZE);
+		configuredTable.setFont(TABLE_FONT);
+		configureColumnWidths(configuredTable.getColumnModel());
+		return configuredTable;
+	}
+
+	private void configureColumnWidths(TableColumnModel columnModel) {
+		int bound = Math.min(COLUMN_WIDTHS.length, columnModel.getColumnCount());
+		for (int i = 0; i < bound; i++) {
+			columnModel.getColumn(i).setPreferredWidth(COLUMN_WIDTHS[i]);
+		}
+	}
+
+	private void configureNorthPanel() {
+		label.setFont(HEADER_FONT);
+		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+		northPanel.add(label);
+	}
+
+	private void configureCenterPanel() {
+		centerPanel.setLayout(new BorderLayout());
+		centerPanel.add(printButton, BorderLayout.NORTH);
+		centerPanel.add(scrollPane, BorderLayout.CENTER);
+		centerPanel.setBorder(BorderFactory.createTitledBorder("Borrowed books:"));
+	}
+
+	private JButton createPrintButton() {
+		JButton button = new JButton("print the books", PRINT_ICON);
+		button.setToolTipText("Print");
+		button.setFont(BUTTON_FONT);
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				startPrintJob();
 			}
 		});
-		//for setting the visible to true
-		setVisible(true);
-		//to show the frame
-		pack();
+		return button;
+	}
+
+	private void startPrintJob() {
+		Thread runner = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				performPrint();
+			}
+		}, "ListBorrowedBooksPrinter");
+		runner.start();
+	}
+
+	private void performPrint() {
+		try {
+			PrinterJob prnJob = PrinterJob.getPrinterJob();
+			prnJob.setPrintable(new PrintingBooks(DEFAULT_QUERY));
+			if (!prnJob.printDialog()) {
+				return;
+			}
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			prnJob.print();
+		}
+		catch (PrinterException ex) {
+			System.out.println("Printing error: " + ex.toString());
+		}
+		finally {
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		}
 	}
 }
