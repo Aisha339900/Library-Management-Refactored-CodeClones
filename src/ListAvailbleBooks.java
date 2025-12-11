@@ -13,11 +13,10 @@
 import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 /**
  *A public class
@@ -29,51 +28,51 @@ public class ListAvailbleBooks extends JInternalFrame {
 
 	private static final String JDBC_DRIVER = "org.gjt.mm.mysql.Driver";
 	private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Library";
-	private static final String USER_NAME = "root";
-	private static final String PASSWORD = "nielit";
-	private static final String DEFAULT_QUERY = "SELECT BookID,Subject,Title,Author,Publisher," +
-	        "Copyright,Edition,Pages,ISBN,Library,ShelfNo FROM Books WHERE Availble = true";
-	private static final Font TABLE_FONT = new Font("Tahoma", Font.PLAIN, 12);
-	private static final Font HEADER_FONT = new Font("Tahoma", Font.BOLD, 14);
-	private static final Font BUTTON_FONT = new Font("Tahoma", Font.PLAIN, 12);
-	private static final ImageIcon FRAME_ICON = new ImageIcon(ClassLoader.getSystemResource("images/List16.gif"));
-	private static final ImageIcon PRINT_ICON = new ImageIcon(ClassLoader.getSystemResource("images/Print16.gif"));
-	private static final Dimension TABLE_SIZE = new Dimension(990, 200);
-	private static final int[] COLUMN_WIDTHS = {20, 100, 150, 50, 70, 40, 40, 40, 75, 50, 30};
-
-	private JPanel northPanel = new JPanel();
-	private JPanel centerPanel = new JPanel();
-	private JLabel label = new JLabel("THE LIST FOR THE AVAILABLE BOOKS");
-	private JButton printButton;
-	private JTable table;
-	private JScrollPane scrollPane;
-	private ResultSetTableModel tableModel;
-
 	public ListAvailbleBooks() {
 		super("Available Books", false, true, false, true);
 		setFrameIcon(FRAME_ICON);
 
-		Container cp = getContentPane();
-
-		tableModel = createTableModel(DEFAULT_QUERY);
-		table = createConfiguredTable(tableModel);
-		scrollPane = new JScrollPane(table);
-		printButton = createPrintButton();
-
-		configureNorthPanel();
-		configureCenterPanel();
-
-		cp.add("North", northPanel);
-		cp.add("Center", centerPanel);
+		Container container = getContentPane();
+		container.add(buildHeaderPanel(), BorderLayout.NORTH);
+		container.add(buildContentPanel(), BorderLayout.CENTER);
 
 		setVisible(true);
 		pack();
 	}
 
-	private ResultSetTableModel createTableModel(String query) {
+	private JPanel buildHeaderPanel() {
+		JLabel headerLabel = new JLabel("THE LIST FOR THE AVAILABLE BOOKS");
+		headerLabel.setFont(HEADER_FONT);
+		JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		panel.add(headerLabel);
+		return panel;
+	}
+
+	private JPanel buildContentPanel() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(createPrintButton(), BorderLayout.NORTH);
+		panel.add(buildTableScrollPane(), BorderLayout.CENTER);
+		panel.setBorder(BorderFactory.createTitledBorder("Available Books:"));
+		return panel;
+	}
+
+	private JScrollPane buildTableScrollPane() {
+		JTable configuredTable = createConfiguredTable();
+		return new JScrollPane(configuredTable);
+	}
+
+	private JTable createConfiguredTable() {
+		JTable configuredTable = new JTable(buildTableModel());
+		configuredTable.setPreferredScrollableViewportSize(TABLE_SIZE);
+		configuredTable.setFont(TABLE_FONT);
+		applyColumnWidths(configuredTable.getColumnModel());
+		return configuredTable;
+	}
+
+	private ResultSetTableModel buildTableModel() {
 		try {
-			ResultSetTableModel model = new ResultSetTableModel(JDBC_DRIVER, DATABASE_URL, USER_NAME, PASSWORD, query);
-			model.setQuery(query);
+			ResultSetTableModel model = new ResultSetTableModel(JDBC_DRIVER, DATABASE_URL, USER_NAME, PASSWORD, DEFAULT_QUERY);
+			model.setQuery(DEFAULT_QUERY);
 			return model;
 		}
 		catch (ClassNotFoundException | SQLException exception) {
@@ -81,54 +80,25 @@ public class ListAvailbleBooks extends JInternalFrame {
 		}
 	}
 
-	private JTable createConfiguredTable(ResultSetTableModel model) {
-		JTable configuredTable = new JTable(model);
-		configuredTable.setPreferredScrollableViewportSize(TABLE_SIZE);
-		configuredTable.setFont(TABLE_FONT);
-		configureColumnWidths(configuredTable.getColumnModel());
-		return configuredTable;
-	}
-
-	private void configureColumnWidths(TableColumnModel columnModel) {
-		int bound = Math.min(COLUMN_WIDTHS.length, columnModel.getColumnCount());
-		for (int i = 0; i < bound; i++) {
-			columnModel.getColumn(i).setPreferredWidth(COLUMN_WIDTHS[i]);
-		}
-	}
-
-	private void configureNorthPanel() {
-		label.setFont(HEADER_FONT);
-		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		northPanel.add(label);
-	}
-
-	private void configureCenterPanel() {
-		centerPanel.setLayout(new BorderLayout());
-		centerPanel.add(printButton, BorderLayout.NORTH);
-		centerPanel.add(scrollPane, BorderLayout.CENTER);
-		centerPanel.setBorder(BorderFactory.createTitledBorder("Available Books:"));
+	private void applyColumnWidths(TableColumnModel columnModel) {
+		IntStream.range(0, Math.min(COLUMN_WIDTHS.length, columnModel.getColumnCount()))
+		        .forEach(index -> columnModel.getColumn(index).setPreferredWidth(COLUMN_WIDTHS[index]));
 	}
 
 	private JButton createPrintButton() {
 		JButton button = new JButton("print the books", PRINT_ICON);
 		button.setToolTipText("Print");
 		button.setFont(BUTTON_FONT);
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				startPrintJob();
-			}
-		});
+		button.addActionListener(event -> runAsyncPrint());
 		return button;
 	}
 
-	private void startPrintJob() {
-		Thread runner = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				performPrint();
-			}
-		}, "ListAvailableBooksPrinter");
+	private void runAsyncPrint() {
+		runInBackground(this::performPrint, "ListAvailableBooksPrinter");
+	}
+
+	private void runInBackground(Runnable task, String threadName) {
+		Thread runner = new Thread(task, threadName);
 		runner.start();
 	}
 
@@ -139,6 +109,16 @@ public class ListAvailbleBooks extends JInternalFrame {
 			if (!prnJob.printDialog()) {
 				return;
 			}
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			prnJob.print();
+		}
+		catch (PrinterException ex) {
+			System.out.println("Printing error: " + ex.toString());
+		}
+		finally {
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		}
+	}
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			prnJob.print();
 		}
