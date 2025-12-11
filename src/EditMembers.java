@@ -20,10 +20,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.Date;
-
-/**
- *A public class
- */
 public class EditMembers extends JInternalFrame {
 	/***************************************************************************
 	 ***      declaration of the private variables used in the program       ***
@@ -34,10 +30,33 @@ public class EditMembers extends JInternalFrame {
 	private static final Font TEXT_FONT = new Font("Tahoma", Font.PLAIN, 11);
 	private static final Font BUTTON_FONT = new Font("Tahoma", Font.BOLD, 11);
 
-	//for creating the North Panel
 	private JPanel northPanel = new JPanel();
-	//for creaing the North Label
-	//constructor of addMembers
+	private JLabel northLabel = new JLabel("MEMBER INFORMATION");
+	private JPanel centerPanel = new JPanel();
+	private JPanel editPanel = new JPanel();
+	private JPanel editInformationPanel = new JPanel();
+	private JPanel editInformationLabelPanel = new JPanel();
+	private JPanel editInformationTextFieldPanel = new JPanel();
+	private JPanel editButtonPanel = new JPanel();
+	private JLabel editLabel = new JLabel("MemberID: ");
+	private JTextField editTextField = new JTextField(25);
+	private JButton editButton = new JButton("Edit");
+	private JPanel informationPanel = new JPanel();
+	private JPanel informationLabelPanel = new JPanel();
+	private JLabel[] informationLabel = new JLabel[7];
+	private String[] informaionString = {" Reg. No: ", " The Password: ", " Rewrite the password: ",
+	        " The Name: ", " E-Mail: ", " Major: ", " Valid Upto: "};
+	private JPanel informationTextFieldPanel = new JPanel();
+	private JTextField[] informationTextField = new JTextField[4];
+	private JPasswordField[] informationPasswordField = new JPasswordField[2];
+	private JPanel updateInformationButtonPanel = new JPanel();
+	private JButton updateInformationButton = new JButton("Update the Information");
+	private JPanel southPanel = new JPanel();
+	private JButton OKButton = new JButton("Exit");
+	private Members member;
+	private String[] data;
+	private DateButton expiry_date;
+
 	public EditMembers() {
 		super("Edit Members", false, true, false, true);
 		setFrameIcon(new ImageIcon(ClassLoader.getSystemResource("images/Edit16.gif")));
@@ -58,7 +77,7 @@ public class EditMembers extends JInternalFrame {
 		setVisible(true);
 		pack();
 	}
-	
+
 	private void setupNorthPanel() {
 		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		northLabel.setFont(HEADER_FONT);
@@ -243,143 +262,89 @@ public class EditMembers extends JInternalFrame {
 		}
 	}
 
-		/***********************************************************************
-		 * for setting the layout for the panel,setting the font for the button*
-		 * and adding the button to the panel.								   *
-		 * finally adding the panel to the container						   *
-		 ***********************************************************************/
-		updateInformationButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		updateInformationButton.setFont(new Font("Tahoma", Font.BOLD, 11));
-		updateInformationButtonPanel.add(updateInformationButton);
-		informationPanel.add("South", updateInformationButtonPanel);
-		centerPanel.add("Center", informationPanel);
-		cp.add("Center", centerPanel);
-
-		/***********************************************************************
-		 * for setting the layout for the panel,setting the font for the button*
-		 * adding the button to the panel & setting the border.				   *
-		 * finally adding the panel to the container						   *
-		 ***********************************************************************/
-		southPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		OKButton.setFont(new Font("Tahoma", Font.BOLD, 11));
-		southPanel.add(OKButton);
-		southPanel.setBorder(BorderFactory.createEtchedBorder());
-		cp.add("South", southPanel);
-
-		/***********************************************************************
-		 * for adding the action listener to the button,first the text will be *
-		 * taken from the JTextField[] and make the connection for database,   *
-		 * after that update the table in the database with the new value      *
-		 ***********************************************************************/
-		editButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				//for checking if there is a missing information
-				if (isEditCorrect()) {
-					Thread runner = new Thread() {
-						public void run() {
-                            member = new Members();
-							//for checking if there is no same information in the database
-							member.connection("SELECT * FROM Members WHERE MemberID = " + editTextField.getText());
-                            //member.connection("SELECT * FROM Members WHERE ID = " + editTextField.getText());
-                            //int ID = member.getID();
-                            int regNo = member.getRegNo();
-							if (regNo > 0) {
-                            //if(ID==Integer.parseInt(editTextField.getText())){
-
-								informationTextField[0].setText(member.getRegNo() + "");
-								informationTextField[1].setText(member.getName());
-								informationTextField[2].setText(member.getEmail());
-								informationTextField[3].setText(member.getMajor());
-								expiry_date.setDate(member.getValidUpto());
-								informationPasswordField[0].setText(member.getPassword());
-								informationPasswordField[1].setText(member.getPassword());
-							}
-							else {
-								JOptionPane.showMessageDialog(null, "Please, write a correct MemberID", "Error", JOptionPane.ERROR_MESSAGE);
-								editTextField.setText(null);
-								clearTextField();
-							}
-						}
-					};
-					runner.start();
-				}
-				else {
-					JOptionPane.showMessageDialog(null, "Please, write the MemberID", "Warning", JOptionPane.WARNING_MESSAGE);
-				}
-			}
-		});
-
-		/***********************************************************************
-		 * for adding the action listener to the button,first the text will be *
-		 * taken from the JTextField[] and make the connection for database,   *
-		 * after that update the table in the database with the new value      *
-		 ***********************************************************************/
-		updateInformationButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				//for checking if there is a missing information
-				if (isCorrect()) {
-					if (isPasswordCorrect()) {
-						Thread runner = new Thread() {
-							public void run() {
-                            Date expiryDate= new Date();
-                            expiryDate=expiry_date.getDate();
-                            Date presentDate=new Date();
-                            if(presentDate.before(expiryDate))
-                           {
-								member = new Members();
-                                /*member.connection("SELECT * FROM Members WHERE ID = " + data[0]);
-								int ID = member.getID();
-								if (Integer.parseInt(data[0]) != ID) {*/
-								//for updting the members database
-								member.update("UPDATE Members SET RegNo = " + data[0] + ", Password = '" + data[1] + "', Name = '" +
-								        data[2] + "', EMail = '" + data[3] + "', Major = '" + data[4] + "', ValidUpto = '" +
-								        data[5] + "' WHERE MemberID = " + editTextField.getText());
-								//for setting the array of JTextField to empty
-								//clearTextField();
-                                dispose();
-                                /*}
-                                else
-									JOptionPane.showMessageDialog(null, "Member is in the Library", "Error", JOptionPane.ERROR_MESSAGE);*/
-							}
-                            else
-                                JOptionPane.showMessageDialog(null, "Expiry Date is invalid", "Warning", JOptionPane.WARNING_MESSAGE);
-                        }
-						};
-						runner.start();
-					}
-					//if the password is wrong
-					else
-						JOptionPane.showMessageDialog(null, "the passowrd is wrong", "Error", JOptionPane.ERROR_MESSAGE);
-				}
-				//if there is a missing data, then display Message Dialog
-				else
-					JOptionPane.showMessageDialog(null, "Please, complete the information", "Warning", JOptionPane.WARNING_MESSAGE);
-			}
-		});
-		//for adding the action listener for the button to dispose the frame
-		OKButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				dispose();
-			}
-		});
-		//for setting the visible to true
-		setVisible(true);
-		//show the internal frame
-		pack();
+	//for checking the password
+	public boolean isPasswordCorrect() {
+		if (Arrays.equals(informationPasswordField[0].getPassword(), informationPasswordField[1].getPassword())) {
+			data[1] = new String(informationPasswordField[0].getPassword());
+			return true;
+		}
+		return false;
 	}
 
-    class keyListener extends KeyAdapter {
+	//for checking the information from the text field
+	public boolean isCorrect() {
+		data = new String[6];
+		for (int i = 0; i < informationLabel.length; i++) {
+			if (i == 0) {
+				if (!informationTextField[i].getText().equals("")) {
+					data[i] = informationTextField[i].getText();
+				}
+				else {
+					return false;
+				}
+			}
+			if (i == 1 || i == 2) {
+				if (informationPasswordField[i - 1].getPassword().length == 0) {
+					return false;
+				}
+			}
+			if (i == 3 || i == 4 || i == 5) {
+				if (!informationTextField[i - 2].getText().equals("")) {
+					data[i - 1] = informationTextField[i - 2].getText();
+				}
+				else {
+					return false;
+				}
+			}
+			if (i == 6) {
+				if (!expiry_date.getText().equals("")) {
+					data[i - 1] = expiry_date.getText();
+				}
+				else {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
-        public void keyTyped(KeyEvent e) {
-                char c = e.getKeyChar();
-                if (!(Character.isDigit(c) ||
-                        (c == KeyEvent.VK_BACK_SPACE) ||
-                        (c == KeyEvent.VK_ENTER) ||
-                        (c == KeyEvent.VK_DELETE))) {
-                    getToolkit().beep();
-                    JOptionPane.showMessageDialog(null, "This Field Only Accept Integer Number", "WARNING",JOptionPane.DEFAULT_OPTION);
-                    e.consume();
-                 }
+	public boolean isEditCorrect() {
+		return !editTextField.getText().equals("");
+	}
+
+	public void clearTextField() {
+		editTextField.setText(null);
+		for (int i = 0; i < informationLabel.length; i++) {
+			if (i == 0) {
+				if (informationTextField[i] != null) {
+					informationTextField[i].setText(null);
+				}
+			}
+			if (i == 1 || i == 2) {
+				if (informationPasswordField[i - 1] != null) {
+					informationPasswordField[i - 1].setText(null);
+				}
+			}
+			if (i == 3 || i == 4 || i == 5) {
+				if (informationTextField[i - 2] != null) {
+					informationTextField[i - 2].setText(null);
+				}
+			}
+		}
+	}
+
+	class keyListener extends KeyAdapter {
+		public void keyTyped(KeyEvent e) {
+			char c = e.getKeyChar();
+			if (!(Character.isDigit(c) || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_ENTER) ||
+			        (c == KeyEvent.VK_DELETE))) {
+				getToolkit().beep();
+				JOptionPane.showMessageDialog(null, "This Field Only Accept Integer Number", "WARNING", JOptionPane.DEFAULT_OPTION);
+				e.consume();
+			}
+		}
+	}//inner class closed
+}
             }
     }//inner class closed
 

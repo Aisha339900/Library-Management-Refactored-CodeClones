@@ -27,45 +27,28 @@ public class AddMembers extends JInternalFrame {
 	 ***      declaration of the private variables used in the program       ***
 	 ***************************************************************************/
 
-	//for creating the North Panel
+	private static final Font HEADER_FONT = new Font("Tahoma", Font.BOLD, 14);
+	private static final Font LABEL_FONT = new Font("Tahoma", Font.BOLD, 11);
+	private static final Font TEXT_FONT = new Font("Tahoma", Font.PLAIN, 11);
+	private static final Font BUTTON_FONT = new Font("Tahoma", Font.BOLD, 11);
+
 	private JPanel northPanel = new JPanel();
-	//for creaing the North Label
 	private JLabel northLabel = new JLabel("MEMBER INFORMATION");
-
-	//for creating the Center Panel
 	private JPanel centerPanel = new JPanel();
-	//for creating an Internal Panel in the center panel
 	private JPanel informationLabelPanel = new JPanel();
-	//for creating an array of JLabel
 	private JLabel[] informationLabel = new JLabel[7];
-	//for creating an array of String
-	/*private String[] informaionString = {" Member ID: ", " The Password: ", " Rewrite the password: ",
-	                                     " The Name: ", " E-MAIL: ", " Major:", " Expired: "};*/
-    private String[] informaionString = {" Reg. No: ", " The Password: ", " Rewrite the password: ",
-	                                     " The Name: ", " E-Mail: ", " Major: ", " Valid Upto: "};
-	//for creating an Internal Panel in the center panel
+	private String[] informaionString = {" Reg. No: ", " The Password: ", " Rewrite the password: ",
+	        " The Name: ", " E-Mail: ", " Major: ", " Valid Upto: "};
 	private JPanel informationTextFieldPanel = new JPanel();
-	//for creating an array of JTextField
 	private JTextField[] informationTextField = new JTextField[4];
-	//for creating an array of JPasswordField
 	private JPasswordField[] informationPasswordField = new JPasswordField[2];
-
-	//for creating an Internal Panel in the center panel
 	private JPanel insertInformationButtonPanel = new JPanel();
-	//for creating a button
 	private JButton insertInformationButton = new JButton("Insert the Information");
-
-	//for creating the South Panel
 	private JPanel southPanel = new JPanel();
-	//for creating a button
 	private JButton OKButton = new JButton("Exit");
-
-	//create objects from another classes for using them in the ActionListener
 	private Members member;
-	//for creating an array of string to store the data
 	private String[] data;
-
-    private DateButton expiry_date;
+	private DateButton expiry_date;
 
 	//for checking the password
 	public boolean isPasswordCorrect() {
@@ -130,152 +113,140 @@ public class AddMembers extends JInternalFrame {
 				informationTextField[i - 2].setText(null);
 		}
 	}
-	//constructor of addMembers
 	public AddMembers() {
-		//for setting the title for the internal frame
 		super("Add Members", false, true, false, true);
-		//for setting the icon
 		setFrameIcon(new ImageIcon(ClassLoader.getSystemResource("images/Add16.gif")));
-       // setDefaultCloseOperation(JInternalFrame.DISPOSE_ON_CLOSE);
-		//for getting the graphical user interface components display area
+		expiry_date = new DateButton();
+		expiry_date.setForeground(Color.red);
+
 		Container cp = getContentPane();
-        expiry_date = new DateButton();
-        expiry_date.setForeground(Color.red);
+		setupNorthPanel();
+		setupCenterPanel();
+		setupSouthPanel();
 
-		//for setting the layout
-		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		//for setting the font
-		northLabel.setFont(new Font("Tahoma", Font.BOLD, 14));
-		//for adding the label to the panel
-		northPanel.add(northLabel);
-		//for adding the panel to the container
 		cp.add("North", northPanel);
+		cp.add("Center", centerPanel);
+		cp.add("South", southPanel);
 
-		//for setting the layout
+		configureActionListeners();
+
+		setVisible(true);
+		pack();
+	}
+
+	private void setupNorthPanel() {
+		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+		northLabel.setFont(HEADER_FONT);
+		northPanel.add(northLabel);
+	}
+
+	private void setupCenterPanel() {
 		centerPanel.setLayout(new BorderLayout());
-		//for setting the border to the panel
 		centerPanel.setBorder(BorderFactory.createTitledBorder("Add a new member:"));
-		//for setting the layout
 		informationLabelPanel.setLayout(new GridLayout(7, 1, 1, 1));
-		//for setting the layout
 		informationTextFieldPanel.setLayout(new GridLayout(7, 1, 1, 1));
-		/***********************************************************************
-		 * for adding the strings to the labels, for setting the font		   *
-		 * and adding these labels to the panel.							   *
-		 * finally adding the panel to the container						   *
-		 ***********************************************************************/
+		configureInformationLabelPanel();
+		configureInformationFieldPanel();
+		centerPanel.add("West", informationLabelPanel);
+		centerPanel.add("East", informationTextFieldPanel);
+		configureInsertButtonPanel();
+	}
+
+	private void configureInformationLabelPanel() {
 		for (int i = 0; i < informationLabel.length; i++) {
 			informationLabelPanel.add(informationLabel[i] = new JLabel(informaionString[i]));
-			informationLabel[i].setFont(new Font("Tahoma", Font.BOLD, 11));
+			informationLabel[i].setFont(LABEL_FONT);
 		}
-		//for adding the panel to the centerPanel
-		centerPanel.add("West", informationLabelPanel);
+	}
 
-		/***********************************************************************
-		 * for adding the JTextField and JPasswordField to the panel and       *
-		 * setting the font to the JTextField and JPasswordField. Finally      *
-		 * adding the panel to the centerPanel                                 *
-		 ***********************************************************************/
+	private void configureInformationFieldPanel() {
 		for (int i = 0; i < informationLabel.length; i++) {
 			if (i == 1 || i == 2) {
 				informationTextFieldPanel.add(informationPasswordField[i - 1] = new JPasswordField(25));
-				informationPasswordField[i - 1].setFont(new Font("Tahoma", Font.PLAIN, 11));
+				informationPasswordField[i - 1].setFont(TEXT_FONT);
 			}
 			if (i == 0) {
 				informationTextFieldPanel.add(informationTextField[i] = new JTextField(25));
-				informationTextField[i].setFont(new Font("Tahoma", Font.PLAIN, 11));
-                informationTextField[i].addKeyListener(new keyListener());
+				informationTextField[i].setFont(TEXT_FONT);
+				informationTextField[i].addKeyListener(new keyListener());
 			}
 			if (i == 3 || i == 4 || i == 5) {
 				informationTextFieldPanel.add(informationTextField[i - 2] = new JTextField(25));
-				informationTextField[i - 2].setFont(new Font("Tahoma", Font.PLAIN, 11));
-                }
-            if(i==6)
-            {
-                informationTextFieldPanel.add(expiry_date);
-            }
+				informationTextField[i - 2].setFont(TEXT_FONT);
+			}
+			if (i == 6) {
+				informationTextFieldPanel.add(expiry_date);
+			}
 		}
-		centerPanel.add("East", informationTextFieldPanel);
+	}
 
-		/***********************************************************************
-		 * for setting the layout for the panel,setting the font for the button*
-		 * and adding the button to the panel.								   *
-		 * finally adding the panel to the container						   *
-		 ***********************************************************************/
+	private void configureInsertButtonPanel() {
 		insertInformationButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		insertInformationButton.setFont(new Font("Tahoma", Font.BOLD, 11));
+		insertInformationButton.setFont(BUTTON_FONT);
 		insertInformationButtonPanel.add(insertInformationButton);
 		centerPanel.add("South", insertInformationButtonPanel);
-		cp.add("Center", centerPanel);
+	}
 
-		/***********************************************************************
-		 * for setting the layout for the panel,setting the font for the button*
-		 * adding the button to the panel & setting the border.				   *
-		 * finally adding the panel to the container						   *
-		 ***********************************************************************/
+	private void setupSouthPanel() {
 		southPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		OKButton.setFont(new Font("Tahoma", Font.BOLD, 11));
+		OKButton.setFont(BUTTON_FONT);
 		southPanel.add(OKButton);
 		southPanel.setBorder(BorderFactory.createEtchedBorder());
-		cp.add("South", southPanel);
+	}
 
-		/***********************************************************************
-		 * for adding the action listener to the button,first the text will be *
-		 * taken from the JTextField[] and make the connection for database,   *
-		 * after that update the table in the database with the new value      *
-		 ***********************************************************************/
+	private void configureActionListeners() {
 		insertInformationButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				//for checking if there is a missing information
 				if (isCorrect()) {
 					if (isPasswordCorrect()) {
-						Thread runner = new Thread() {
+						runInBackground(new Runnable() {
 							public void run() {
-                                Date expiryDate= new Date();
-                                expiryDate=expiry_date.getDate();
-                                Date presentDate=new Date();
-                                if(presentDate.before(expiryDate))
-                               {
-                                member = new Members();
-								//for checking if there is no same information in the database
-								member.connection("SELECT * FROM Members WHERE RegNo = " + data[0]);
-								int regNo = member.getRegNo();
-								if (Integer.parseInt(data[0]) != regNo) {
-									member.update("INSERT INTO Members (RegNo,Password,Name,EMail,Major,ValidUpto) VALUES (" +
-									        data[0] + ", '" + data[1] + "','" + data[2] + "','" +
-									        data[3] + "','" + data[4] + "','" + data[5] + "')");
-									//for setting the array of JTextField & JPasswordField to null
-									//clearTextField();
-                                    dispose();
-								}
-								else
-									JOptionPane.showMessageDialog(null, "Member is in the Library", "Error", JOptionPane.ERROR_MESSAGE);
+								insertMemberInformation();
 							}
-                                else
-                                    JOptionPane.showMessageDialog(null, "Expiry Date is invalid", "Warning", JOptionPane.WARNING_MESSAGE);
-                        }
-						};
-						runner.start();
+						}, "AddMembersInsert");
 					}
-					//if the password is wrong
-					else
+					else {
 						JOptionPane.showMessageDialog(null, "the passowrd is wrong", "Error", JOptionPane.ERROR_MESSAGE);
+					}
 				}
-				//if there is a missing data, then display Message Dialog
-				else
+				else {
 					JOptionPane.showMessageDialog(null, "Please, complete the information", "Warning", JOptionPane.WARNING_MESSAGE);
+				}
 			}
 		});
-		//for adding the action listener for the button to dispose the frame
+
 		OKButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
 				dispose();
 			}
 		});
-		//for setting the visible to true
-		setVisible(true);
-		//show the internal frame
-		pack();
+	}
+
+	private void runInBackground(Runnable task, String threadName) {
+		Thread runner = new Thread(task, threadName);
+		runner.start();
+	}
+
+	private void insertMemberInformation() {
+		Date expiryDate = expiry_date.getDate();
+		Date presentDate = new Date();
+		if (presentDate.before(expiryDate)) {
+			member = new Members();
+			member.connection("SELECT * FROM Members WHERE RegNo = " + data[0]);
+			int regNo = member.getRegNo();
+			if (Integer.parseInt(data[0]) != regNo) {
+				member.update("INSERT INTO Members (RegNo,Password,Name,EMail,Major,ValidUpto) VALUES (" +
+				        data[0] + ", '" + data[1] + "','" + data[2] + "','" +
+				        data[3] + "','" + data[4] + "','" + data[5] + "')");
+				dispose();
+			}
+			else {
+				JOptionPane.showMessageDialog(null, "Member is in the Library", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Expiry Date is invalid", "Warning", JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
     class keyListener extends KeyAdapter {
